@@ -26,10 +26,12 @@ jobs:
   
   build-dashbaord-and-push:
     needs: changes
-    if: ${{ needs.changes.outputs.dashboard == 'true' }}
+    if: ${{ needs.changes.outputs.dashboard == 'true' }}    
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/DotNetCore.CAP.Dashboard/wwwroot  
     steps:
-    - run: cd src/DotNetCore.CAP.Dashboard/wwwroot
     - name: Use Node.js 🥽
       uses: actions/setup-node@v1
       with:
