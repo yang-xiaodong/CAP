@@ -30,14 +30,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./src/DotNetCore.CAP.Dashboard/wwwroot  
+        working-directory: src/DotNetCore.CAP.Dashboard/wwwroot  
     steps:
     - name: Use Node.js 🥽
       uses: actions/setup-node@v1
       with:
         node-version: '14.x'
     - name: Install dependencies 🧵
-      run: npm install      
+      run: npm install
     - name: Build to dist 🧨
       run: npm run build
     - name: Push dist 🚀
