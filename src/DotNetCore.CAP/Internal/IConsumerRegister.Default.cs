@@ -2,9 +2,9 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNetCore.CAP.Diagnostics;
@@ -67,8 +67,15 @@ namespace DotNetCore.CAP.Internal
 
             foreach (var matchGroup in groupingMatches)
             {
+                ICollection<string> topics;
+                using (var client = _consumerClientFactory.Create(matchGroup.Key))
+                {
+                    topics = client.FetchTopics(matchGroup.Value.Select(x => x.TopicName));
+                }
+
                 for (int i = 0; i < _options.ConsumerThreadCount; i++)
                 {
+                    var topicIds = topics.Select(t => t);
                     Task.Factory.StartNew(() =>
                     {
                         try
@@ -79,7 +86,7 @@ namespace DotNetCore.CAP.Internal
 
                                 RegisterMessageProcessor(client);
 
-                                client.Subscribe(matchGroup.Value.Select(x => x.TopicName));
+                                client.Subscribe(topicIds);
 
                                 client.Listening(_pollingDelay, _cts.Token);
                             }
@@ -181,7 +188,7 @@ namespace DotNetCore.CAP.Internal
                     }
                     catch (Exception e)
                     {
-                        transportMessage.Headers.Add(Headers.Exception, nameof(SerializationException) + "-->" + e.Message);
+                        transportMessage.Headers[Headers.Exception] = e.GetType().Name + "-->" + e.Message;
                         if (transportMessage.Headers.TryGetValue(Headers.Type, out var val))
                         {
                             var dataUri = $"data:{val};base64," + Convert.ToBase64String(transportMessage.Body);
@@ -271,6 +278,9 @@ namespace DotNetCore.CAP.Internal
                     break;
                 case MqLogType.ExceptionReceived:
                     _logger.LogError("AzureServiceBus subscriber received an error. --> " + logmsg.Reason);
+                    break;
+                case MqLogType.AsyncErrorEvent:
+                    _logger.LogError("NATS subscriber received an error. --> " + logmsg.Reason);
                     break;
                 case MqLogType.InvalidIdFormat:
                     _logger.LogError("AmazonSQS subscriber delete inflight message failed, invalid id. --> " + logmsg.Reason);

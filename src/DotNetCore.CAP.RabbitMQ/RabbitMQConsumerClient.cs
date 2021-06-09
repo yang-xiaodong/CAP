@@ -92,7 +92,8 @@ namespace DotNetCore.CAP.RabbitMQ
         public void Dispose()
         {
             _channel?.Dispose();
-            _connection?.Dispose();
+            //The connection should not be closed here, because the connection is still in use elsewhere. 
+            //_connection?.Dispose();
         }
 
         public void Connect()
@@ -116,8 +117,14 @@ namespace DotNetCore.CAP.RabbitMQ
 
                     var arguments = new Dictionary<string, object>
                     {
-                        {"x-message-ttl", _rabbitMQOptions.QueueMessageExpires}
+                        {"x-message-ttl", _rabbitMQOptions.QueueArguments.MessageTTL}
                     };
+
+                    if (!string.IsNullOrEmpty(_rabbitMQOptions.QueueArguments.QueueMode))
+                    {
+                        arguments.Add("x-queue-mode", _rabbitMQOptions.QueueArguments.QueueMode);
+                    }
+
                     _channel.QueueDeclare(_queueName, durable: true, exclusive: false, autoDelete: false, arguments: arguments);
                 }
             }
@@ -162,11 +169,24 @@ namespace DotNetCore.CAP.RabbitMQ
         private void OnConsumerReceived(object sender, BasicDeliverEventArgs e)
         {
             var headers = new Dictionary<string, string>();
-            foreach (var header in e.BasicProperties.Headers)
+            if (e.BasicProperties.Headers != null)
             {
-                headers.Add(header.Key, header.Value == null ? null : Encoding.UTF8.GetString((byte[])header.Value));
+                foreach (var header in e.BasicProperties.Headers)
+                {
+                    headers.Add(header.Key, header.Value == null ? null : Encoding.UTF8.GetString((byte[])header.Value));
+                }
             }
+
             headers.Add(Headers.Group, _queueName);
+
+            if (_rabbitMQOptions.CustomHeaders != null)
+            {
+                var customHeaders = _rabbitMQOptions.CustomHeaders(e);
+                foreach (var customHeader in customHeaders)
+                {
+                    headers[customHeader.Key] = customHeader.Value;
+                }
+            }
 
             var message = new TransportMessage(headers, e.Body.ToArray());
 

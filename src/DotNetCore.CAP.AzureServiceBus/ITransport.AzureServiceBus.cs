@@ -46,6 +46,12 @@ namespace DotNetCore.CAP.AzureServiceBus
                     CorrelationId = transportMessage.GetCorrelationId()
                 };
 
+                if (_asbOptions.Value.EnableSessions)
+                {
+                    transportMessage.Headers.TryGetValue(AzureServiceBusHeaders.SessionId, out var sessionId);
+                    message.SessionId = string.IsNullOrEmpty(sessionId) ? transportMessage.GetId() : sessionId;
+                }
+
                 foreach (var header in transportMessage.Headers)
                 {
                     message.UserProperties.Add(header.Key, header.Value);
@@ -76,10 +82,7 @@ namespace DotNetCore.CAP.AzureServiceBus
 
             try
             {
-                if (_topicClient == null)
-                {
-                    _topicClient = new TopicClient(BrokerAddress.Endpoint, _asbOptions.Value.TopicPath, RetryPolicy.NoRetry);
-                }
+                _topicClient ??= new TopicClient(BrokerAddress.Endpoint, _asbOptions.Value.TopicPath, RetryPolicy.NoRetry);
             }
             finally
             {

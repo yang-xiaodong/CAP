@@ -11,6 +11,7 @@ CAP supports several transport methods:
 * [Azure Service Bus](azure-service-bus.md)
 * [Amazon SQS](aws-sqs.md)
 * [In-Memory Queue](in-memory-queue.md)
+* [Redis Streams](redis-streams.md)
 
 ## How to select a transport
 
@@ -32,5 +33,11 @@ CAP supports several transport methods:
 
 Thanks to the community for supporting CAP, the following is the implementation of community-supported transport
 
+* ActiveMQ (@[Lukas Zhang](https://github.com/lukazh/Lukaz.CAP.ActiveMQ)): https://github.com/lukazh
+
+* RedisMQ  ([@木木](https://github.com/difudotnet)) https://github.com/difudotnet/CAP.RedisMQ.Extensions
+
 * ZeroMQ ([@maikebing](https://github.com/maikebing))： https://github.com/maikebing/CAP.Extensions
+
+
 

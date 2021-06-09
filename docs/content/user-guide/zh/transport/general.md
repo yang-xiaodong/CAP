@@ -11,6 +11,7 @@ CAP 支持以下几种运输方式：
 * [Azure Service Bus](azure-service-bus.md)
 * [Amazon SQS](aws-sqs.md)
 * [In-Memory Queue](in-memory-queue.md)
+* [Redis Streams](redis-streams.md)
 
 ## 怎么选择运输器
 
@@ -32,6 +33,8 @@ CAP 支持以下几种运输方式：
 
 感谢社区对CAP的支持，以下是社区支持的运输器实现
 
-* ZeroMQ  ([@maikebing](https://github.com/maikebing)) https://github.com/maikebing/CAP.Extensions/tree/master/src/DotNetCore.CAP.ZeroMQ
+* ActiveMQ (@[Lukas Zhang](https://github.com/lukazh/Lukaz.CAP.ActiveMQ)): https://github.com/lukazh
 
-* RedisMQ  ([@木木](https://github.com/difudotnet)) https://github.com/difudotnet/CAP.RedisMQ.Extensions
+* RedisMQ ([@木木](https://github.com/difudotnet)): https://github.com/difudotnet/CAP.RedisMQ.Extensions
+
+* ZeroMQ ([@maikebing](https://github.com/maikebing)): https://github.com/maikebing/CAP.Extensions/tree/master/src/DotNetCore.CAP.ZeroMQ

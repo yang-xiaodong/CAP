@@ -9,7 +9,8 @@ namespace DotNetCore.CAP.Internal
 {
     public static class Helper
     {
-        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local)
+            .AddHours(TimeZoneInfo.Local.BaseUtcOffset.Hours);
 
         public static long ToTimestamp(DateTime value)
         {
@@ -41,6 +42,21 @@ namespace DotNetCore.CAP.Internal
         public static bool IsComplexType(Type type)
         {
             return !CanConvertFromString(type);
+        }
+
+        public static string WildcardToRegex(string wildcard)
+        {
+            if (wildcard.IndexOf('*') >= 0)
+            {
+                return ("^" + wildcard + "$").Replace("*", "[0-9a-zA-Z]+").Replace(".", "\\.");
+            }
+
+            if (wildcard.IndexOf('#') >= 0)
+            {
+                return ("^" + wildcard.Replace(".", "\\.") + "$").Replace("#", "[0-9a-zA-Z\\.]+");
+            }
+
+            return wildcard;
         }
 
         public static bool IsInnerIP(string ipAddress)

@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DotNetCore.CAP.Filter;
 using DotNetCore.CAP.Messages;
 using DotNetCore.CAP.Serialization;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,10 +36,11 @@ namespace DotNetCore.CAP.Internal
             cancellationToken.ThrowIfCancellationRequested();
 
             var methodInfo = context.ConsumerDescriptor.MethodInfo;
+            var reflectedType = methodInfo.ReflectedType.Name;
 
             _logger.LogDebug("Executing subscriber method : {0}", methodInfo.Name);
 
-            var key = $"{methodInfo.Module.Name}_{methodInfo.MetadataToken}";
+            var key = $"{methodInfo.Module.Name}_{reflectedType}_{methodInfo.MetadataToken}";
             var executor = _executors.GetOrAdd(key, x => ObjectMethodExecutor.Create(methodInfo, context.ConsumerDescriptor.ImplTypeInfo));
 
             using var scope = _serviceProvider.CreateScope();
@@ -87,7 +89,48 @@ namespace DotNetCore.CAP.Internal
                 }
             }
 
-            var resultObj = await ExecuteWithParameterAsync(executor, obj, executeParameters);
+            var filter = provider.GetService<ISubscribeFilter>();
+            object resultObj = null;
+            try
+            {
+                if (filter != null)
+                {
+                    var etContext = new ExecutingContext(context, executeParameters);
+                    filter.OnSubscribeExecuting(etContext);
+                    executeParameters = etContext.Arguments;
+                }
+
+                resultObj = await ExecuteWithParameterAsync(executor, obj, executeParameters);
+
+                if (filter != null)
+                {
+                    var edContext = new ExecutedContext(context, resultObj);
+                    filter.OnSubscribeExecuted(edContext);
+                    resultObj = edContext.Result;
+                }
+            }
+            catch (Exception e)
+            {
+                if (filter != null)
+                {
+                    var exContext = new ExceptionContext(context, e);
+                    filter.OnSubscribeException(exContext);
+                    if (!exContext.ExceptionHandled)
+                    {
+                        throw exContext.Exception;
+                    }
+
+                    if (exContext.Result != null)
+                    {
+                        resultObj = exContext.Result;
+                    }
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
             return new ConsumerExecutedResult(resultObj, message.GetId(), message.GetCallbackName());
         }
 
