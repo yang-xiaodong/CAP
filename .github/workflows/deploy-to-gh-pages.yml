@@ -29,6 +29,7 @@ jobs:
     if: ${{ needs.changes.outputs.dashboard == 'true' }}
     runs-on: ubuntu-latest
     steps:
+    - run: cd src/DotNetCore.CAP.Dashboard/wwwroot
     - name: Use Node.js 🥽
       uses: actions/setup-node@v1
       with:
@@ -38,7 +39,8 @@ jobs:
     - name: Build to dist 🧨
       run: npm run build
     - name: Push dist 🚀
-      run: |       
+      run: |
+        git add ./dist
         git commit -am "build dashboard to dist" --author="Github Action <>"
         git push
 
