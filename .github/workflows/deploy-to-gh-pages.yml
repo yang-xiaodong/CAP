@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       docs: ${{ steps.filter.outputs.docs }}
+      dashboard: ${{ steps.filter.outputs.dashboard }}
     steps:
     - name: Checkout 🛎️
       uses: actions/checkout@v2
@@ -22,6 +23,7 @@ jobs:
             - 'docs/**'
           dashboard:
             - 'src/DotNetCore.CAP.Dashboard/wwwroot/src/**'
+  
   build-dashbaord-and-push:
     needs: changes
     if: ${{ needs.changes.outputs.dashboard == 'true' }}
@@ -33,7 +35,7 @@ jobs:
         node-version: '14.x'
     - name: Install dependencies 🧵
       run: npm install      
-    - name: Build to dist 构建 🧨
+    - name: Build to dist 🧨
       run: npm run build
     - name: Push dist 🚀
       run: |       
