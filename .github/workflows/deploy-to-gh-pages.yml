@@ -46,8 +46,10 @@ jobs:
       run: npm run build
     - name: Push dist 🚀
       run: |
-        git add ./dist
-        git commit -am "build dashboard to dist" --author="Github Action <>"
+        git config --global user.email ""
+        git config --global user.name "Github Action"
+        git add ./dist        
+        git commit -am "build dashboard to dist"
         git push
 
   build-docs-and-deploy:
